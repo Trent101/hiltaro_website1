@@ -1,76 +1,756 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Change this: the text shown in the browser tab and in search results -->
-  <title>My Website</title>
-  <meta name="description" content="A short description of your site.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hiltaro</title>
+<meta name="description" content="Hiltaro builds reactive strike training systems that time every hit to the millisecond and track your reflexes over years.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a dark training floor. Hero = live arena you can play; below, instrument-panel sections framed by HUD corner ticks. Blue means "strike this", red means "hit registered", same as the hardware. */
+:root{
+  --void:#060911;
+  --deck:#0B111D;
+  --panel:#0F1725;
+  --line:rgba(132,164,236,.14);
+  --line-hi:rgba(132,164,236,.32);
+  --ink:#E7ECF6;
+  --mute:#8C98B2;
+  --dim:#5A6680;
+  --cue:#3F95FF;
+  --cue-hi:#9CCBFF;
+  --cue-soft:rgba(63,149,255,.22);
+  --strike:#FF3D52;
+  --strike-soft:rgba(255,61,82,.28);
+  --f-display:"Michroma","Eurostile","Arial Black",system-ui,sans-serif;
+  --f-body:"Hanken Grotesk","Helvetica Neue",Arial,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --t-xs:.75rem; --t-sm:.875rem; --t-md:1.0625rem; --t-lg:1.25rem;
+  --t-xl:clamp(1.5rem,2.6vw,2.1rem); --t-2xl:clamp(2.1rem,5vw,3.9rem);
+  --gut:clamp(16px,4vw,40px);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--void);color:var(--ink);font-family:var(--f-body);font-size:var(--t-md);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;line-height:1.18;letter-spacing:.01em;margin:0;text-wrap:balance}
+p{margin:0}
+.wrap{max-width:1180px;margin-inline:auto;padding-inline:var(--gut)}
+.mono{font-family:var(--f-mono)}
+.eyebrow{font-family:var(--f-mono);font-size:var(--t-xs);letter-spacing:.16em;text-transform:uppercase;color:var(--cue-hi);display:flex;align-items:center;gap:.6rem}
+.eyebrow::before{content:"";width:18px;height:1px;background:var(--cue)}
+:focus-visible{outline:2px solid var(--cue-hi);outline-offset:3px}
 
-  <style>
-    /* ---- Colors and fonts: change these to restyle the whole page ---- */
-    :root {
-      --bg: #fafaf9;
-      --text: #1c1917;
-      --muted: #78716c;
-      --accent: #2563eb;
-      --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    }
+/* faint scan texture over everything */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;background:repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px)}
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+/* NAV */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:rgba(6,9,17,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:64px}
+.brand{display:flex;align-items:center;gap:.7rem;text-decoration:none}
+.brand b{font-family:var(--f-display);font-weight:400;letter-spacing:.32em;font-size:.95rem}
+.nav ul{display:flex;gap:1.8rem;list-style:none;margin:0;padding:0;font-size:var(--t-sm);color:var(--mute)}
+.nav ul a{text-decoration:none;transition:color .2s}
+.nav ul a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:.55rem;font-family:var(--f-mono);font-size:var(--t-sm);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:.8rem 1.2rem;border:1px solid var(--line-hi);color:var(--ink);background:transparent;cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+.btn:hover{border-color:var(--cue);background:rgba(63,149,255,.08)}
+.btn.primary{background:var(--cue);border-color:var(--cue);color:#03101F;font-weight:500}
+.btn.primary:hover{background:var(--cue-hi);box-shadow:0 0 30px var(--cue-soft)}
+.btn.sm{padding:.55rem .9rem;font-size:var(--t-xs)}
+@media (max-width:820px){.nav ul{display:none}}
 
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+/* HERO */
+.hero{position:relative;padding-block:clamp(40px,7vw,88px) clamp(48px,7vw,96px);border-bottom:1px solid var(--line);overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-20% -10% auto auto;width:70%;height:120%;background:radial-gradient(ellipse at 70% 40%,rgba(63,149,255,.13),transparent 60%);pointer-events:none}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:clamp(28px,5vw,64px);align-items:center;position:relative}
+.hero-copy{display:flex;flex-direction:column;gap:1.5rem;min-width:0}
+.hero h1{font-size:var(--t-2xl)}
+.hero h1 em{font-style:normal;color:var(--cue);text-shadow:0 0 28px var(--cue-soft)}
+.lede{color:var(--mute);font-size:var(--t-lg);max-width:34ch;line-height:1.55}
+.cta-row{display:flex;flex-wrap:wrap;gap:.8rem}
+.tag-row{display:flex;flex-wrap:wrap;gap:.5rem 1.2rem;font-family:var(--f-mono);font-size:var(--t-xs);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.tag-row span{display:flex;align-items:center;gap:.45rem}
+.tag-row span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--cue);box-shadow:0 0 8px var(--cue)}
+@media (max-width:900px){.hero .wrap{grid-template-columns:minmax(0,1fr)}.lede{max-width:46ch}}
 
-    header, main, footer {
-      width: 100%;
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 24px;
-    }
+/* HUD frame */
+.hud{position:relative;border:1px solid var(--line);background:linear-gradient(180deg,rgba(15,23,37,.9),rgba(9,14,24,.9))}
+.hud::before,.hud::after{content:"";position:absolute;width:14px;height:14px;border-color:var(--cue);border-style:solid;pointer-events:none}
+.hud::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+.hud::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
 
-    header { display: flex; justify-content: space-between; align-items: center; }
-    header a { color: var(--text); text-decoration: none; font-weight: 600; }
-    nav a { margin-left: 20px; font-weight: 400; color: var(--muted); }
-    nav a:hover { color: var(--accent); }
+/* ARENA */
+.arena{min-width:0}
+.arena-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.75rem 1rem;border-bottom:1px solid var(--line);font-family:var(--f-mono);font-size:var(--t-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.live-dot{display:inline-flex;align-items:center;gap:.45rem}
+.live-dot::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.arena[data-state="live"] .live-dot::before,.arena[data-state="waiting"] .live-dot::before{background:var(--strike);box-shadow:0 0 8px var(--strike);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+.stage{position:relative;height:clamp(300px,42vw,420px);overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.floor{position:absolute;left:-30%;right:-30%;bottom:-38%;height:120%;transform:perspective(520px) rotateX(64deg);transform-origin:50% 100%;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse at 50% 70%,#000 25%,transparent 70%);mask-image:radial-gradient(ellipse at 50% 70%,#000 25%,transparent 70%)}
+.you{position:absolute;left:50%;bottom:14%;width:46px;height:16px;transform:translateX(-50%);border:1px dashed var(--line-hi);border-radius:50%}
+.you::after{content:"YOU";position:absolute;top:120%;left:50%;transform:translateX(-50%);font-family:var(--f-mono);font-size:.6rem;letter-spacing:.2em;color:var(--dim)}
+.pylon{position:absolute;transform:translateX(-50%) scale(calc(var(--s,1) * var(--k,1)));transform-origin:50% 100%;background:none;border:0;padding:0 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;-webkit-tap-highlight-color:transparent}
+.pylon .pool{position:absolute;bottom:-10px;left:50%;width:120px;height:30px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,var(--glow,transparent),transparent 70%);opacity:0;transition:opacity .15s}
+.pylon .id{font-family:var(--f-mono);font-size:.62rem;letter-spacing:.14em;color:var(--dim);margin-bottom:8px;transition:color .15s}
+.col{position:relative;width:34px;height:150px;border-radius:17px 17px 4px 4px;background:linear-gradient(90deg,rgba(255,255,255,.05),rgba(255,255,255,.14) 30%,rgba(255,255,255,.04) 70%,rgba(255,255,255,.1));border:1px solid rgba(160,185,240,.22);display:flex;flex-direction:column;gap:3px;padding:6px 5px;transition:box-shadow .12s,border-color .12s}
+.zone{flex:1;border-radius:10px 10px 3px 3px;background:rgba(120,150,220,.07);transition:background .12s}
+.zone+.zone{border-radius:3px}
+.collar{width:46px;height:14px;margin-top:-1px;background:linear-gradient(180deg,#1C2638,#121A29);border:1px solid rgba(160,185,240,.2);border-radius:3px}
+.legs{display:block;width:120px;height:26px;margin-top:-2px}
+.legs path{stroke:#3A475F;stroke-width:3;fill:none;stroke-linecap:round}
+.pylon:not(.lit):not(.hit) .zone{animation:breathe 4.5s ease-in-out infinite}
+.pylon:nth-of-type(2) .zone{animation-delay:-1.1s}.pylon:nth-of-type(3) .zone{animation-delay:-2.2s}.pylon:nth-of-type(4) .zone{animation-delay:-3.3s}
+@keyframes breathe{50%{background:rgba(120,160,240,.16)}}
+.pylon.lit{--glow:var(--cue-soft)}
+.pylon.lit .zone{background:var(--cue);box-shadow:inset 0 0 10px rgba(255,255,255,.4)}
+.pylon.lit .col{border-color:var(--cue-hi);box-shadow:0 0 22px var(--cue),0 0 70px var(--cue-soft)}
+.pylon.lit .id{color:var(--cue-hi)}
+.pylon.lit .pool,.pylon.hit .pool{opacity:1}
+.pylon.hit{--glow:var(--strike-soft)}
+.pylon.hit .zone{background:var(--strike)}
+.pylon.hit .col{border-color:#FF8A97;box-shadow:0 0 26px var(--strike),0 0 80px var(--strike-soft)}
+.pylon.hit .id{color:#FF8A97}
+.pylon.miss .col{animation:shake .25s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.pop{position:absolute;left:50%;top:-6px;transform:translate(-50%,-100%);font-family:var(--f-mono);font-size:.95rem;font-weight:500;color:#FFB3BC;white-space:nowrap;pointer-events:none;opacity:0}
+.pylon.hit .pop{animation:pop .9s ease-out forwards}
+@keyframes pop{0%{opacity:1;transform:translate(-50%,-80%)}100%{opacity:0;transform:translate(-50%,-190%)}}
+.stage-msg{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-family:var(--f-mono);font-size:var(--t-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);text-align:center;white-space:nowrap;padding:.35rem .7rem;background:rgba(6,9,17,.7);border:1px solid var(--line)}
+.stage-msg.warn{color:#FF8A97;border-color:var(--strike-soft)}
+.readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line)}
+.readout div{padding:.8rem 1rem;border-right:1px solid var(--line);min-width:0}
+.readout div:last-child{border-right:0}
+.readout dt{font-family:var(--f-mono);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.readout dd{margin:.15rem 0 0;font-family:var(--f-mono);font-size:clamp(1rem,2.2vw,1.35rem);font-variant-numeric:tabular-nums;color:var(--ink)}
+.readout dd small{font-size:.7em;color:var(--mute);margin-left:.15em}
+.arena-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.8rem 1rem;padding:.8rem 1rem;border-top:1px solid var(--line)}
+.trace{display:flex;align-items:flex-end;gap:3px;height:28px;flex:1;min-width:120px}
+.trace i{flex:1;max-width:14px;background:var(--cue);opacity:.75;border-radius:1px 1px 0 0;min-height:2px}
+.trace i.best{background:var(--strike);opacity:1}
+.arena-note{font-size:var(--t-xs);color:var(--dim);padding:0 1rem .9rem;margin-top:-.2rem}
+@media (max-width:520px){.readout{grid-template-columns:repeat(2,minmax(0,1fr))}.readout div:nth-child(2){border-right:0}.readout div:nth-child(-n+2){border-bottom:1px solid var(--line)}.col{height:120px}.stage{--k:.78}}
 
-    main { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-    h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.15; margin-bottom: 16px; }
-    p { color: var(--muted); font-size: 1.125rem; }
+/* SPEC RAIL */
+.rail{border-bottom:1px solid var(--line);background:var(--deck)}
+.rail ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+.rail li{padding:1.3rem 1rem;border-right:1px solid var(--line);min-width:0}
+.rail li:first-child{padding-left:0}
+.rail li:last-child{border-right:0}
+.rail b{display:block;font-family:var(--f-mono);font-weight:500;font-size:1.3rem;font-variant-numeric:tabular-nums;color:var(--ink)}
+.rail span{font-size:var(--t-xs);color:var(--mute);line-height:1.4;display:block;margin-top:.2rem}
+@media (max-width:900px){.rail ul{grid-template-columns:repeat(3,minmax(0,1fr))}.rail li:nth-child(3n){border-right:0}.rail li:nth-child(-n+3){border-bottom:1px solid var(--line)}.rail li:nth-child(3n+1){padding-left:0}}
+@media (max-width:480px){.rail ul{grid-template-columns:repeat(2,minmax(0,1fr))}.rail li{border-right:1px solid var(--line)!important;padding-left:1rem!important;border-bottom:1px solid var(--line)}.rail li:nth-child(2n){border-right:0!important}.rail li:nth-child(2n+1){padding-left:0!important}.rail li:nth-last-child(-n+2){border-bottom:0}}
 
-    footer { color: var(--muted); font-size: 0.875rem; }
-  </style>
+/* SECTIONS */
+section.block{padding-block:clamp(64px,9vw,120px);border-bottom:1px solid var(--line)}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.2rem 3rem;align-items:end;margin-bottom:clamp(32px,5vw,56px)}
+.sec-head .l{display:flex;flex-direction:column;gap:1rem}
+.sec-head h2{font-size:var(--t-xl)}
+.sec-head p{color:var(--mute);max-width:52ch}
+@media (max-width:820px){.sec-head{grid-template-columns:minmax(0,1fr)}}
+
+/* SYSTEM */
+.system{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(24px,4vw,56px);align-items:start}
+@media (max-width:900px){.system{grid-template-columns:minmax(0,1fr)}}
+.xsec{padding:clamp(16px,3vw,28px);position:sticky;top:88px}
+@media (max-width:900px){.xsec{position:relative;top:auto}}
+.xsec svg{display:block;width:100%;height:auto;max-width:100%}
+.xsec figcaption{font-family:var(--f-mono);font-size:var(--t-xs);color:var(--dim);letter-spacing:.06em;margin-top:.8rem}
+.parts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.parts li{display:grid;grid-template-columns:3.2rem minmax(0,1fr);gap:1rem;padding:1.15rem 0;border-top:1px solid var(--line)}
+.parts li:last-child{border-bottom:1px solid var(--line)}
+.parts .k{font-family:var(--f-mono);font-size:var(--t-xs);color:var(--cue-hi);letter-spacing:.08em;padding-top:.25rem}
+.parts h3{font-family:var(--f-body);font-weight:600;font-size:var(--t-lg);letter-spacing:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem .7rem}
+.parts h3 small{font-family:var(--f-mono);font-weight:400;font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);border:1px solid var(--line);padding:.1rem .45rem}
+.parts p{color:var(--mute);font-size:var(--t-md);margin-top:.3rem}
+
+/* CLOCK */
+.clock{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(24px,5vw,72px);align-items:center}
+@media (max-width:900px){.clock{grid-template-columns:minmax(0,1fr)}}
+.clock-copy{display:flex;flex-direction:column;gap:1.2rem}
+.clock-copy h2{font-size:var(--t-xl)}
+.clock-copy p{color:var(--mute);max-width:50ch}
+.clock-copy p strong{color:var(--ink);font-weight:500}
+.tl{padding:clamp(18px,3vw,32px);display:flex;flex-direction:column;gap:1.4rem}
+.tl-row{display:grid;grid-template-columns:7.5rem minmax(0,1fr);gap:1rem;align-items:center}
+.tl-row .lab{font-family:var(--f-mono);font-size:var(--t-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.bar{position:relative;height:30px;border-left:1px solid var(--line-hi)}
+.seg{position:absolute;top:4px;bottom:4px;display:flex;align-items:center;padding:0 .55rem;font-family:var(--f-mono);font-size:.7rem;white-space:nowrap;overflow:hidden}
+.seg.rt{left:0;width:78%;background:linear-gradient(90deg,var(--cue-soft),rgba(63,149,255,.45));border-right:2px solid var(--strike);color:var(--cue-hi)}
+.seg.radio{left:78%;width:12%;background:repeating-linear-gradient(135deg,rgba(140,152,178,.22) 0 4px,transparent 4px 8px);color:var(--mute);justify-content:center}
+.seg.jit{left:78%;width:18%;background:repeating-linear-gradient(135deg,rgba(255,61,82,.25) 0 4px,transparent 4px 8px);color:#FF8A97;justify-content:center}
+.seg.rt2{left:0;width:96%;background:linear-gradient(90deg,rgba(140,152,178,.12),rgba(140,152,178,.25));color:var(--mute)}
+.tl-key{display:flex;flex-wrap:wrap;gap:.6rem 1.4rem;font-size:var(--t-xs);color:var(--mute);border-top:1px solid var(--line);padding-top:1rem}
+.tl-key span{display:flex;align-items:center;gap:.5rem}
+.tl-key i{width:12px;height:12px;display:inline-block}
+.tl-title{font-family:var(--f-mono);font-size:var(--t-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.tl-title b{color:var(--ink);font-weight:500}
+@media (max-width:520px){.tl-row{grid-template-columns:minmax(0,1fr);gap:.4rem}}
+
+/* MODES */
+.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.mode{background:var(--void);padding:clamp(20px,2.6vw,30px);display:flex;flex-direction:column;gap:.75rem;min-width:0;transition:background .25s}
+.mode:hover{background:var(--panel)}
+.mode svg{width:56px;height:56px;display:block}
+.mode h3{font-size:1rem;letter-spacing:.04em}
+.mode p{color:var(--mute);font-size:var(--t-sm);line-height:1.6}
+.mode .metric{margin-top:auto;padding-top:.6rem;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.mode .metric b{color:var(--cue-hi);font-weight:500}
+@media (max-width:900px){.modes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.modes{grid-template-columns:minmax(0,1fr)}}
+.modes-note{margin-top:1.2rem;font-size:var(--t-sm);color:var(--dim)}
+
+/* DATA */
+.data{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:clamp(24px,4vw,48px);align-items:start}
+@media (max-width:900px){.data{grid-template-columns:minmax(0,1fr)}}
+.chart{padding:clamp(14px,2.5vw,24px)}
+.chart-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem 1rem;align-items:baseline;margin-bottom:.8rem}
+.chart-top h3{font-family:var(--f-mono);font-size:var(--t-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:400}
+.chart-top .ill{font-family:var(--f-mono);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border:1px dashed var(--line-hi);padding:.15rem .5rem}
+.chart svg{display:block;width:100%;height:auto}
+.chart svg text{font-family:var(--f-mono);font-size:10px;fill:var(--dim)}
+.alert{margin-top:1rem;display:flex;gap:.8rem;align-items:flex-start;padding:.8rem 1rem;border:1px solid var(--strike-soft);background:rgba(255,61,82,.06);font-size:var(--t-sm);color:#FFC2C9}
+.alert b{font-family:var(--f-mono);font-weight:500;font-size:.68rem;letter-spacing:.14em;color:var(--strike);white-space:nowrap;padding-top:.15rem}
+.track{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1.3rem}
+.track li{display:flex;flex-direction:column;gap:.25rem;padding-left:1rem;border-left:1px solid var(--line-hi)}
+.track h3{font-family:var(--f-body);font-weight:600;font-size:var(--t-md);letter-spacing:0}
+.track p{color:var(--mute);font-size:var(--t-sm)}
+
+/* SABER */
+.saber-wrap{display:flex;flex-direction:column;gap:clamp(28px,4vw,44px)}
+.saber{position:relative;height:120px;display:flex;align-items:center;padding-inline:4%}
+.saber .hilt{width:22%;min-width:90px;height:30px;background:linear-gradient(180deg,#2A3346,#121927 55%,#1D2536);border:1px solid rgba(160,185,240,.25);border-radius:4px 2px 2px 4px;position:relative;flex:none}
+.saber .hilt::before{content:"";position:absolute;inset:8px 18% 8px 12%;background:repeating-linear-gradient(90deg,#0B111D 0 4px,transparent 4px 9px)}
+.saber .blade{flex:1;height:16px;border-radius:0 9px 9px 0;background:linear-gradient(180deg,#E6F2FF,var(--cue-hi) 30%,var(--cue) 70%,#1F5FD0);box-shadow:0 0 14px var(--cue),0 0 46px var(--cue-soft),0 0 110px rgba(63,149,255,.18);position:relative;animation:hum 3.6s ease-in-out infinite}
+.saber .blade::after{content:"";position:absolute;right:6px;top:50%;width:10px;height:10px;transform:translateY(-50%);border-radius:50%;border:1.5px solid rgba(6,9,17,.7)}
+@keyframes hum{50%{box-shadow:0 0 18px var(--cue),0 0 60px var(--cue-soft),0 0 130px rgba(63,149,255,.24)}}
+.saber .call{position:absolute;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+.saber .call::before{content:"";position:absolute;width:1px;background:var(--line-hi);left:50%}
+.saber .c1{right:4%;top:0}.saber .c1::before{top:100%;height:28px;left:auto;right:12px}
+.saber .c2{left:44%;bottom:0}.saber .c2::before{bottom:100%;height:28px}
+.saber .c3{left:6%;top:4px}.saber .c3::before{top:100%;height:24px}
+.saber-specs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,3vw,32px)}
+.saber-specs div{display:flex;flex-direction:column;gap:.35rem;min-width:0}
+.saber-specs b{font-family:var(--f-mono);font-weight:500;color:var(--cue-hi);font-size:var(--t-xs);letter-spacing:.12em;text-transform:uppercase}
+.saber-specs p{color:var(--mute);font-size:var(--t-sm)}
+@media (max-width:820px){.saber-specs{grid-template-columns:repeat(2,minmax(0,1fr))}.saber .c2{display:none}}
+@media (max-width:480px){.saber-specs{grid-template-columns:minmax(0,1fr)}.saber .c3{display:none}}
+
+/* FOR */
+.for{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,2.5vw,28px)}
+.for article{display:flex;flex-direction:column;gap:.6rem;padding-top:1.1rem;border-top:1px solid var(--line-hi);min-width:0}
+.for h3{font-family:var(--f-body);font-weight:600;font-size:var(--t-lg);letter-spacing:0}
+.for p{color:var(--mute);font-size:var(--t-sm)}
+.for .cfg{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--cue-hi)}
+@media (max-width:900px){.for{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.for{grid-template-columns:minmax(0,1fr)}}
+
+/* LOG */
+.log{list-style:none;margin:0;padding:0;position:relative}
+.log::before{content:"";position:absolute;left:7.5rem;top:.5rem;bottom:.5rem;width:1px;background:linear-gradient(var(--cue),var(--line) 85%)}
+.log li{display:grid;grid-template-columns:7.5rem minmax(0,1fr);gap:0 2rem;padding-bottom:2rem;position:relative}
+.log li::after{content:"";position:absolute;left:calc(7.5rem - 4px);top:.45rem;width:9px;height:9px;background:var(--void);border:1px solid var(--cue);transform:rotate(45deg)}
+.log li.now::after{background:var(--cue);box-shadow:0 0 12px var(--cue)}
+.log time{font-family:var(--f-mono);font-size:var(--t-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding-top:.15rem;padding-right:1.4rem;text-align:right}
+.log .body{display:flex;flex-direction:column;gap:.35rem;padding-left:.4rem;max-width:62ch}
+.log h3{font-family:var(--f-body);font-weight:600;font-size:var(--t-lg);letter-spacing:0}
+.log p{color:var(--mute);font-size:var(--t-sm)}
+.log blockquote{margin:.4rem 0 0;padding:.7rem 1rem;border-left:2px solid var(--strike);background:rgba(255,61,82,.05);font-family:var(--f-mono);font-size:var(--t-sm);color:#FFC2C9}
+@media (max-width:560px){.log::before{left:4px}.log li{grid-template-columns:minmax(0,1fr);padding-left:1.6rem}.log li::after{left:0}.log time{text-align:left;padding:0 0 .3rem}.log .body{padding-left:0}}
+
+/* CTA */
+.cta{padding-block:clamp(72px,10vw,140px);position:relative;overflow:hidden}
+.cta::before{content:"";position:absolute;left:50%;bottom:-40%;width:900px;max-width:140%;height:500px;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(63,149,255,.16),transparent 65%);pointer-events:none}
+.cta .wrap{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:1.4rem}
+.cta h2{font-size:var(--t-2xl);max-width:16ch}
+.cta p{color:var(--mute);max-width:52ch;font-size:var(--t-lg)}
+.mail{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem}
+.mail code{font-family:var(--f-mono);font-size:var(--t-lg);padding:.65rem 1rem;border:1px solid var(--line-hi);background:var(--deck);user-select:all}
+.copied{font-family:var(--f-mono);font-size:var(--t-xs);color:var(--cue-hi);letter-spacing:.1em;text-transform:uppercase}
+
+footer{border-top:1px solid var(--line);padding-block:2rem 2.4rem;font-size:var(--t-xs);color:var(--dim)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem 2rem;align-items:center}
+footer .mono{letter-spacing:.08em;text-transform:uppercase}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
 </head>
 <body>
 
-  <header>
-    <a href="/">My Website</a>
-    <nav>
-      <a href="#">About</a>
-      <a href="#">Contact</a>
-    </nav>
-  </header>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Hiltaro home">
+      <svg width="22" height="30" viewBox="0 0 22 30" aria-hidden="true"><rect x="5.5" y="1" width="11" height="28" rx="5.5" fill="none" stroke="#9CCBFF" stroke-width="1.4"/><rect x="8" y="4" width="6" height="6.5" rx="2" fill="#3F95FF"/><rect x="8" y="12" width="6" height="6" rx="1" fill="#3F95FF" opacity=".35"/><rect x="8" y="19.5" width="6" height="6" rx="1" fill="#3F95FF" opacity=".35"/></svg>
+      <b>HILTARO</b>
+    </a>
+    <ul>
+      <li><a href="#system">System</a></li>
+      <li><a href="#modes">Modes</a></li>
+      <li><a href="#data">Data</a></li>
+      <li><a href="#saber">Saber</a></li>
+      <li><a href="#log">Build log</a></li>
+    </ul>
+    <a class="btn sm" href="#contact">Early access</a>
+  </div>
+</header>
 
-  <main>
-    <h1>Hello, world.</h1>
-    <p>This site is live. Edit index.html to make it yours.</p>
-  </main>
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <div class="eyebrow">Reactive strike training · Patent pending</div>
+        <h1>Strike the <em>light.</em><br>Time every hit.</h1>
+        <p class="lede">Glowing targets stand around you. One lights up, you move and strike, and the target clocks your reaction to the millisecond. Every session adds to a record of how your reflexes change over months and years.</p>
+        <div class="cta-row">
+          <button class="btn primary" type="button" id="heroStart">Take the reaction test</button>
+          <a class="btn" href="#system">See the system</a>
+        </div>
+        <div class="tag-row"><span>Multi-target arena</span><span>Millisecond timing</span><span>Long-term tracking</span></div>
+      </div>
 
-  <footer>
-    &copy; <span id="year"></span> My Website
-  </footer>
+      <div class="arena hud" id="arena" data-state="idle">
+        <div class="arena-head">
+          <span class="live-dot" id="stateLabel">Arena · standby</span>
+          <span>4 targets · randomised</span>
+        </div>
+        <div class="stage" id="stage">
+          <div class="floor" aria-hidden="true"></div>
+          <div class="you" aria-hidden="true"></div>
+          <div class="stage-msg" id="msg" role="status" aria-live="polite">Press start, then hit the blue target</div>
+        </div>
+        <dl class="readout">
+          <div><dt>Last</dt><dd id="rLast">—</dd></div>
+          <div><dt>Best</dt><dd id="rBest">—</dd></div>
+          <div><dt>Average</dt><dd id="rAvg">—</dd></div>
+          <div><dt>Strikes</dt><dd id="rCount">0<small>/10</small></dd></div>
+        </dl>
+        <div class="arena-foot">
+          <div class="trace" id="trace" aria-hidden="true"></div>
+          <button class="btn primary sm" type="button" id="startBtn">Start test</button>
+        </div>
+        <p class="arena-note">Click, tap, or press keys 1–4. This browser version adds screen and input lag; real Hiltaro targets time the strike on board.</p>
+      </div>
+    </div>
+  </section>
 
-  <script>
-    // Keeps the copyright year current automatically
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <div class="rail">
+    <div class="wrap">
+      <ul>
+        <li><b>1 → 10+</b><span>targets per arena, auto-discovered at power-on</span></li>
+        <li><b>&lt;10 ms</b><span>wireless link from target to controller</span></li>
+        <li><b>3</b><span>light zones per target for precision drills</span></li>
+        <li><b>~1.7 m</b><span>freestanding target height on a five-leg base</span></li>
+        <li><b>8 mm</b><span>layered silicone wrap that cushions every strike</span></li>
+        <li><b>500 ms</b><span>connection heartbeat to every target</span></li>
+      </ul>
+    </div>
+  </div>
 
+  <section class="block" id="system">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="l">
+          <div class="eyebrow">The system</div>
+          <h2>Five parts. One closed training loop.</h2>
+        </div>
+        <p>The system sends a cue, you strike, the target registers the hit and times it, and the result is stored. Only the targets and controller are required. Add the saber, wearables and room lighting when you want more data or more atmosphere.</p>
+      </div>
+
+      <div class="system">
+        <figure class="xsec hud" style="margin:0">
+          <svg viewBox="0 0 480 380" role="img" aria-label="Cross-section of a Hiltaro target: outer silicone wrap, polycarbonate core, inner spine and LED arrays">
+            <defs>
+              <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0" stop-color="#3F95FF" stop-opacity=".38"/>
+                <stop offset=".75" stop-color="#3F95FF" stop-opacity=".08"/>
+                <stop offset="1" stop-color="#3F95FF" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <g transform="translate(150 190)">
+              <circle r="128" fill="none" stroke="#8C98B2" stroke-opacity=".5" stroke-width="1.2"/>
+              <circle r="122" fill="none" stroke="#8C98B2" stroke-opacity=".32" stroke-width="1"/>
+              <circle r="116" fill="none" stroke="#8C98B2" stroke-opacity=".32" stroke-width="1"/>
+              <circle r="110" fill="none" stroke="#8C98B2" stroke-opacity=".32" stroke-width="1"/>
+              <circle r="100" fill="url(#coreGlow)"/>
+              <circle r="101" fill="none" stroke="#9CCBFF" stroke-width="7" stroke-opacity=".85"/>
+              <circle r="24" fill="#0B111D" stroke="#E7ECF6" stroke-opacity=".7" stroke-width="5"/>
+              <g fill="#3F95FF">
+                <rect x="-9" y="-35" width="18" height="6" rx="1.5"/>
+                <rect x="-9" y="29" width="18" height="6" rx="1.5"/>
+                <rect x="-35" y="-9" width="6" height="18" rx="1.5"/>
+                <rect x="29" y="-9" width="6" height="18" rx="1.5"/>
+              </g>
+              <g fill="none" stroke="#3F95FF" stroke-opacity=".35">
+                <circle r="48" stroke-dasharray="2 5"/>
+                <circle r="74" stroke-dasharray="2 7"/>
+              </g>
+            </g>
+            <g stroke="#5A6680" fill="none" stroke-width="1">
+              <path d="M262 92 L318 52 H332"/>
+              <path d="M231 130 L318 132 H332"/>
+              <path d="M174 190 L318 212 H332"/>
+              <path d="M180 162 L318 292 H332"/>
+            </g>
+            <g fill="#9CCBFF"><circle cx="262" cy="92" r="2.5"/><circle cx="231" cy="130" r="2.5"/><circle cx="174" cy="190" r="2.5"/><circle cx="180" cy="162" r="2.5"/></g>
+            <g>
+              <text x="338" y="49" fill="#E7ECF6" font-family="IBM Plex Mono, monospace" font-size="11">01 SILICONE WRAP</text>
+              <text x="338" y="64" fill="#8C98B2" font-family="IBM Plex Mono, monospace" font-size="10">4 × 2 mm layers</text>
+              <text x="338" y="129" fill="#E7ECF6" font-family="IBM Plex Mono, monospace" font-size="11">02 CORE</text>
+              <text x="338" y="144" fill="#8C98B2" font-family="IBM Plex Mono, monospace" font-size="10">translucent</text>
+              <text x="338" y="157" fill="#8C98B2" font-family="IBM Plex Mono, monospace" font-size="10">polycarbonate</text>
+              <text x="338" y="209" fill="#E7ECF6" font-family="IBM Plex Mono, monospace" font-size="11">03 SPINE</text>
+              <text x="338" y="224" fill="#8C98B2" font-family="IBM Plex Mono, monospace" font-size="10">sensor + wiring</text>
+              <text x="338" y="289" fill="#E7ECF6" font-family="IBM Plex Mono, monospace" font-size="11">04 LED ARRAY</text>
+              <text x="338" y="304" fill="#8C98B2" font-family="IBM Plex Mono, monospace" font-size="10">360° addressable</text>
+            </g>
+          </svg>
+          <figcaption>TARGET UNIT · TOP SECTION. The wrap cushions the strike, protects the core and diffuses the light into an even glow.</figcaption>
+        </figure>
+
+        <ol class="parts">
+          <li><span class="k">TGT</span><div><h3>Target units</h3><p>Freestanding light columns with their own processor, motion sensor, speaker and LEDs. They glow blue when it is time to strike and flash red when a hit lands. Power one on and the system finds it.</p></div></li>
+          <li><span class="k">MCU</span><div><h3>Master controller</h3><p>Chooses which target fires and when, keeps a 500 ms heartbeat on every unit, and stores each session. If a target drops out mid-session, it leaves the rotation and rejoins when it reconnects. Your session never stops.</p></div></li>
+          <li><span class="k">APP</span><div><h3>App and voice coach</h3><p>Counts you in, calls out milestones and reads your summary when the session ends. Start, stop and switch modes by voice without leaving the floor.</p></div></li>
+          <li><span class="k">SBR</span><div><h3>Instrumented saber <small>Optional</small></h3><p>A light-up training blade with a motion sensor in the tip. It measures swing speed, acceleration and impact on every strike.</p></div></li>
+          <li><span class="k">AMB</span><div><h3>Ambient lighting <small>Optional</small></h3><p>Wall and ceiling light units that react to the session in real time: countdowns, hits, misses and new personal bests.</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" style="background:var(--deck)">
+    <div class="wrap clock">
+      <div class="clock-copy">
+        <div class="eyebrow">Why the numbers hold up</div>
+        <h2>The clock lives inside the target.</h2>
+        <p>Most light-up trainers time you from a central box, so radio delay gets added to every reaction. That delay changes from strike to strike, which makes long-term comparisons unreliable.</p>
+        <p><strong>Hiltaro targets start the clock when they light up and stop it when they feel the hit</strong>, on their own processor. The radio only carries the finished number. A 280 ms reaction this year means the same thing as a 280 ms reaction next year.</p>
+      </div>
+      <div class="tl hud" aria-label="Timing comparison">
+        <div class="tl-title"><b>One strike, two ways to time it</b> · illustrative</div>
+        <div class="tl-row">
+          <span class="lab">Hiltaro</span>
+          <div class="bar"><span class="seg rt">reaction 286 ms</span><span class="seg radio">radio</span></div>
+        </div>
+        <div class="tl-row">
+          <span class="lab">Central timer</span>
+          <div class="bar"><span class="seg rt2">reaction 286 ms + radio</span><span class="seg jit">± jitter</span></div>
+        </div>
+        <div class="tl-key">
+          <span><i style="background:var(--cue)"></i>Timed on the target</span>
+          <span><i style="background:repeating-linear-gradient(135deg,rgba(140,152,178,.5) 0 3px,transparent 3px 6px)"></i>Sent after, not counted</span>
+          <span><i style="background:repeating-linear-gradient(135deg,rgba(255,61,82,.6) 0 3px,transparent 3px 6px)"></i>Delay that pollutes the result</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="modes">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="l">
+          <div class="eyebrow">Training modes</div>
+          <h2>Same hardware. New drills by software.</h2>
+        </div>
+        <p>Each mode is a mix of cue, timing, scoring and hit detection. New modes arrive as updates, so the targets you buy today keep getting new drills.</p>
+      </div>
+      <div class="modes">
+        <article class="mode">
+          <svg viewBox="0 0 56 56" aria-hidden="true"><g fill="none" stroke="#5A6680"><circle cx="28" cy="10" r="5"/><circle cx="10" cy="28" r="5"/><circle cx="28" cy="46" r="5"/></g><circle cx="46" cy="28" r="5" fill="#3F95FF"/><circle cx="46" cy="28" r="10" fill="none" stroke="#3F95FF" stroke-opacity=".4"/></svg>
+          <h3>RANDOMISED</h3>
+          <p>One target lights at a random moment. Strike it and the next one fires. This is the benchmark mode for your reaction time.</p>
+          <span class="metric">Scores · <b>reaction ms</b></span>
+        </article>
+        <article class="mode">
+          <svg viewBox="0 0 56 56" aria-hidden="true"><rect x="19" y="4" width="18" height="48" rx="9" fill="none" stroke="#5A6680"/><rect x="23" y="9" width="10" height="11" rx="4" fill="#5A6680" opacity=".4"/><rect x="23" y="23" width="10" height="10" rx="2" fill="#3F95FF"/><rect x="23" y="36" width="10" height="11" rx="2" fill="#5A6680" opacity=".4"/></svg>
+          <h3>PRECISION</h3>
+          <p>Only one of the three light zones glows. Hit that exact zone. Trains accuracy and speed together.</p>
+          <span class="metric">Scores · <b>zone accuracy</b></span>
+        </article>
+        <article class="mode">
+          <svg viewBox="0 0 56 56" aria-hidden="true"><rect x="8" y="12" width="14" height="32" rx="7" fill="none" stroke="#5A6680"/><g fill="none" stroke="#3F95FF" stroke-linecap="round"><path d="M30 22 a8 8 0 0 1 0 12"/><path d="M36 17 a15 15 0 0 1 0 22" stroke-opacity=".7"/><path d="M42 12 a22 22 0 0 1 0 32" stroke-opacity=".4"/></g></svg>
+          <h3>AUDIO-ONLY</h3>
+          <p>No light at all. Find the active target by its sound and strike. Builds spatial hearing and awareness.</p>
+          <span class="metric">Scores · <b>reaction ms</b></span>
+        </article>
+        <article class="mode">
+          <svg viewBox="0 0 56 56" aria-hidden="true"><g fill="#3F95FF"><rect x="6" y="14" width="6" height="28" rx="1" opacity=".3"/><rect x="16" y="18" width="6" height="24" rx="1" opacity=".45"/><rect x="26" y="23" width="6" height="19" rx="1" opacity=".6"/><rect x="36" y="28" width="6" height="14" rx="1" opacity=".8"/><rect x="46" y="32" width="6" height="10" rx="1"/></g><path d="M6 50 H52" stroke="#5A6680"/></svg>
+          <h3>ADAPTIVE</h3>
+          <p>The gap between cues shrinks as you speed up and widens when you fade. A strong warm-up for your nervous system.</p>
+          <span class="metric">Scores · <b>pace held</b></span>
+        </article>
+        <article class="mode">
+          <svg viewBox="0 0 56 56" aria-hidden="true"><path d="M8 44 A22 22 0 0 1 48 44" fill="none" stroke="#5A6680" stroke-width="3" stroke-linecap="round"/><path d="M8 44 A22 22 0 0 1 40 24" fill="none" stroke="#FF3D52" stroke-width="3" stroke-linecap="round"/><path d="M28 44 L40 26" stroke="#E7ECF6" stroke-width="2" stroke-linecap="round"/><circle cx="28" cy="44" r="3" fill="#E7ECF6"/></svg>
+          <h3>POWER</h3>
+          <p>Speed takes a back seat. Every strike's impact is measured and ranked, so you can track striking power on its own.</p>
+          <span class="metric">Scores · <b>impact force</b></span>
+        </article>
+        <article class="mode">
+          <svg viewBox="0 0 56 56" aria-hidden="true"><g stroke="#5A6680" stroke-linecap="round"><path d="M8 14 H48"/><path d="M8 28 H48"/><path d="M8 42 H48"/></g><g fill="#060911" stroke="#3F95FF" stroke-width="2"><circle cx="18" cy="14" r="4"/><circle cx="38" cy="28" r="4"/><circle cx="26" cy="42" r="4"/></g></svg>
+          <h3>CUSTOM</h3>
+          <p>Set duration, number of targets, light or sound cues, hit threshold, delay and scoring. Build the drill your coach wants.</p>
+          <span class="metric">Scores · <b>your choice</b></span>
+        </article>
+      </div>
+      <p class="modes-note">In development: endurance, sequence memory, multi-target and head-to-head modes.</p>
+    </div>
+  </section>
+
+  <section class="block" id="data" style="background:var(--deck)">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="l">
+          <div class="eyebrow">Long-term tracking</div>
+          <h2>Your reflexes, charted over years.</h2>
+        </div>
+        <p>Light-up pads tell you how one session went. Hiltaro keeps every strike from every session, so you can see whether you are getting sharper and notice early when you start to slow down.</p>
+      </div>
+      <div class="data">
+        <div class="chart hud">
+          <div class="chart-top">
+            <h3>Average reaction time · weekly · 4-target randomised</h3>
+            <span class="ill">Example data</span>
+          </div>
+          <svg id="trend" viewBox="0 0 640 260" role="img" aria-label="Example chart: weekly average reaction time falls from about 410 ms to about 300 ms over 26 weeks, then rises for three weeks, triggering an alert"></svg>
+          <div class="alert"><b>ALERT</b><span>Your 3-week rolling average is 9% slower than your baseline. Time to look at recovery and load.</span></div>
+        </div>
+        <ul class="track">
+          <li><h3>Fair comparisons only</h3><p>Every session saves its setup: how many targets, the layout, the mode and difficulty. Trends only compare sessions with the same setup.</p></li>
+          <li><h3>Three independent metrics</h3><p>Reaction time, strike force and swing speed each get their own long-term trend line.</p></li>
+          <li><h3>Early-warning alerts</h3><p>When your rolling average drifts above your own baseline and stays there, you get told.</p></li>
+          <li><h3>Heart-rate sync</h3><p>Pair a heart-rate or HRV sensor and see how your body's state lines up with your speed, down to the millisecond.</p></li>
+          <li><h3>Profiles and leaderboards</h3><p>Each athlete has their own history. Standard modes feed a leaderboard. Age-normalised benchmarks show where you stand.</p></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="saber">
+    <div class="wrap saber-wrap">
+      <div class="sec-head" style="margin-bottom:0">
+        <div class="l">
+          <div class="eyebrow">Optional implement</div>
+          <h2>The saber measures what your hands do.</h2>
+        </div>
+        <p>Train bare-handed, gloved, or with any stick and the system works the same. Pick up the Hiltaro saber and every strike also records swing speed, acceleration and impact from the blade's tip.</p>
+      </div>
+      <div class="saber" aria-hidden="true">
+        <span class="call c3">Battery · speaker</span>
+        <div class="hilt"></div>
+        <div class="blade"></div>
+        <span class="call c2">2 × 144 LED/m strips</span>
+        <span class="call c1">Motion sensor in tip</span>
+      </div>
+      <div class="saber-specs">
+        <div><b>Swing speed</b><p>Peak tip speed on every strike, tracked over time as its own metric.</p></div>
+        <div><b>Impact</b><p>Measures how hard the blade stops on contact, independent of the target's sensor.</p></div>
+        <div><b>Live light</b><p>Colour sweeps, fire effects and pulses that react to motion, plus hit and miss flashes.</p></div>
+        <div><b>Untethered</b><p>Rechargeable battery, onboard speaker and wireless link. No cables on the floor.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" style="background:var(--deck)">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="l">
+          <div class="eyebrow">Who it's for</div>
+          <h2>From a home corner to a full arena.</h2>
+        </div>
+        <p>One target works. Three or four is the standard setup. Ten or more turns a hall into an arena.</p>
+      </div>
+      <div class="for">
+        <article><span class="cfg">3–4 targets</span><h3>Combat athletes</h3><p>Fighters, fencers and martial artists who need faster reactions and proof they are improving.</p></article>
+        <article><span class="cfg">4–6 targets</span><h3>Gyms and academies</h3><p>A drill station that tracks every member separately, with leaderboards that keep people coming back.</p></article>
+        <article><span class="cfg">10+ targets</span><h3>Arenas and venues</h3><p>Room lighting, voice calls and many targets together for experience centres and events.</p></article>
+        <article><span class="cfg">1–3 targets</span><h3>Everyday fitness</h3><p>Reaction time is a marker of physical readiness. Watch yours over the years and act early if it slips.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="log">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="l">
+          <div class="eyebrow">Build log</div>
+          <h2>From one LED strip to a company.</h2>
+        </div>
+        <p>Hiltaro started as a single sensor taped to a pipe. These entries come from the founder's own lab notes.</p>
+      </div>
+      <ol class="log">
+        <li><time datetime="2025-04-13">13 Apr 2025</time><div class="body"><h3>First parts on the bench</h3><p>A microcontroller, one motion sensor, a metre of addressable LEDs and lengths of PVC pipe.</p></div></li>
+        <li><time datetime="2025-04-14">14 Apr 2025</time><div class="body"><h3>First hit registered</h3><p>LEDs lit blue at random. A tap on the sensor turned them red.</p><blockquote>"When I give a little jerk to MPU6050, the LEDs turn red indicating I have hit the target. It works!!!!"</blockquote></div></li>
+        <li><time datetime="2025-05-04">4 May 2025</time><div class="body"><h3>Targets go wireless</h3><p>Boards talking to each other directly over a low-latency radio link. Three separately controlled light zones per target. A transistor-driven buzzer for a hit sound loud enough for a busy floor.</p></div></li>
+        <li><time datetime="2025-08">Jul–Aug 2025</time><div class="body"><h3>The body takes shape</h3><p>Translucent polycarbonate and diffused acrylic cores, layered silicone wraps, high-density LED strips for the saber, battery packs and a padded training floor.</p></div></li>
+        <li><time>Filed</time><div class="body"><h3>Patent pending</h3><p>Provisional patent filed in India: "A Modular Reactive Strike Training System with Longitudinal Reaction Time Tracking".</p></div></li>
+        <li><time datetime="2026">2026</time><div class="body"><h3>Hiltaro Technologies Private Limited</h3><p>The company is incorporated in Karnataka to design and build sports technology and reactive training systems.</p></div></li>
+        <li class="now"><time>Now</time><div class="body"><h3>Production targets and first floors</h3><p>Moving from prototypes to production units and the first training spaces.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="cta" id="contact">
+    <div class="wrap">
+      <div class="eyebrow">Early access</div>
+      <h2>Bring the first arena to your floor.</h2>
+      <p>We are lining up the first gyms, academies, venues and athletes to train on Hiltaro. Write to us to get on the list or to talk partnerships.</p>
+      <div class="mail">
+        <code id="mailAddr">hello@hiltaro.com</code>
+        <button class="btn" type="button" id="copyMail">Copy email</button>
+        <span class="copied" id="copied" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Hiltaro Technologies Private Limited · Karnataka, India</span>
+    <span class="mono">Patent pending · Built in India</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  /* ---------- Arena reaction test ---------- */
+  var stage=document.getElementById('stage'), arena=document.getElementById('arena');
+  var msg=document.getElementById('msg'), stateLabel=document.getElementById('stateLabel');
+  var rLast=document.getElementById('rLast'), rBest=document.getElementById('rBest'), rAvg=document.getElementById('rAvg'), rCount=document.getElementById('rCount');
+  var trace=document.getElementById('trace'), startBtn=document.getElementById('startBtn');
+  var TOTAL=10;
+  // diamond layout like a standard 4-target arena; back targets are smaller for depth
+  var spots=[{x:15,b:6,s:1},{x:38,b:36,s:.74},{x:62,b:36,s:.74},{x:85,b:6,s:1}];
+  var legs='<svg class="legs" viewBox="0 0 120 26" aria-hidden="true"><path d="M60 2 L8 22"/><path d="M60 2 L30 25"/><path d="M60 2 L60 25"/><path d="M60 2 L90 25"/><path d="M60 2 L112 22"/></svg>';
+  var pylons=spots.map(function(p,i){
+    var b=document.createElement('button');
+    b.type='button'; b.className='pylon';
+    b.style.left=p.x+'%'; b.style.bottom=p.b+'%'; b.style.setProperty('--s',p.s);
+    b.style.zIndex=Math.round(p.s*10);
+    b.setAttribute('aria-label','Target '+(i+1));
+    b.innerHTML='<span class="pool"></span><span class="pop"></span><span class="id">TGT-0'+(i+1)+'</span><span class="col"><span class="zone"></span><span class="zone"></span><span class="zone"></span></span><span class="collar"></span>'+legs;
+    b.addEventListener('pointerdown',function(e){e.preventDefault();strike(i);});
+    b.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();strike(i);}});
+    stage.appendChild(b);
+    return b;
+  });
+
+  var state='idle', active=-1, t0=0, timer=null, times=[], misses=0, last=-1;
+
+  function setState(s,label){state=s;arena.dataset.state=s;stateLabel.textContent=label;}
+  function say(t,warn){msg.textContent=t;msg.classList.toggle('warn',!!warn);}
+  function fmt(v){return Math.round(v)+'<small>ms</small>';}
+  function clearLit(){pylons.forEach(function(p){p.classList.remove('lit');});}
+
+  function render(){
+    rCount.innerHTML=times.length+'<small>/'+TOTAL+'</small>';
+    if(!times.length){rLast.textContent='—';rBest.textContent='—';rAvg.textContent='—';trace.innerHTML='';return;}
+    var best=Math.min.apply(null,times), avg=times.reduce(function(a,b){return a+b;},0)/times.length;
+    rLast.innerHTML=fmt(times[times.length-1]); rBest.innerHTML=fmt(best); rAvg.innerHTML=fmt(avg);
+    var max=Math.max.apply(null,times);
+    trace.innerHTML=times.map(function(t){return '<i class="'+(t===best?'best':'')+'" style="height:'+Math.max(8,(t/max)*100)+'%"></i>';}).join('');
+  }
+
+  function start(){
+    clearTimeout(timer); clearLit();
+    times=[]; misses=0; last=-1; render();
+    startBtn.textContent='Restart';
+    queue();
+  }
+  function queue(){
+    setState('waiting','Arena · live');
+    say('Wait for blue…');
+    timer=setTimeout(fire,700+Math.random()*1500);
+  }
+  function fire(){
+    var n; do{n=Math.floor(Math.random()*pylons.length);}while(n===last);
+    active=n; last=n; clearLit();
+    pylons[n].classList.add('lit');
+    t0=performance.now();
+    setState('live','Arena · live');
+    say('Strike TGT-0'+(n+1));
+  }
+  function strike(i){
+    if(state==='idle'||state==='done'){ if(state==='idle'){start();} return; }
+    if(state==='waiting'){
+      clearTimeout(timer); say('Too early. Wait for the blue light.',true);
+      timer=setTimeout(queue,900); state='penalty'; return;
+    }
+    if(state!=='live') return;
+    if(i!==active){
+      misses++; var p=pylons[i]; p.classList.remove('miss'); void p.offsetWidth; p.classList.add('miss');
+      say('Wrong target. Find the blue one.',true); return;
+    }
+    var rt=performance.now()-t0;
+    times.push(rt);
+    var tgt=pylons[i]; tgt.classList.remove('lit');
+    tgt.querySelector('.pop').textContent=Math.round(rt)+' ms';
+    tgt.classList.remove('hit'); void tgt.offsetWidth; tgt.classList.add('hit');
+    setTimeout(function(){tgt.classList.remove('hit');},450);
+    active=-1; render();
+    if(times.length>=TOTAL){ finish(); } else { state='between'; timer=setTimeout(queue,350); }
+  }
+  function finish(){
+    var avg=times.reduce(function(a,b){return a+b;},0)/times.length;
+    setState('done','Arena · session complete');
+    say('Session done · avg '+Math.round(avg)+' ms · '+misses+' miss'+(misses===1?'':'es'));
+    startBtn.textContent='Run again';
+  }
+  startBtn.addEventListener('click',start);
+  document.getElementById('heroStart').addEventListener('click',function(){
+    arena.scrollIntoView({behavior:'smooth',block:'center'}); start();
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.target&&/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+    var k=parseInt(e.key,10);
+    if(k>=1&&k<=4&&state!=='idle'&&state!=='done'){e.preventDefault();strike(k-1);}
+  });
+
+  /* ---------- Example trend chart ---------- */
+  var data=[412,405,409,396,391,388,380,384,372,368,365,359,361,350,346,343,339,333,330,326,322,318,314,309,306,302,311,322,331];
+  var svg=document.getElementById('trend'), W=640,H=260,L=44,R=14,T=14,B=30;
+  var yMin=280,yMax=420, n=data.length;
+  function X(i){return L+(i/(n-1))*(W-L-R);}
+  function Y(v){return T+(1-(v-yMin)/(yMax-yMin))*(H-T-B);}
+  var s='';
+  [300,340,380,420].forEach(function(v){s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="rgba(132,164,236,.12)"/><text x="'+(L-8)+'" y="'+(Y(v)+3)+'" text-anchor="end">'+v+'</text>';});
+  [0,7,14,21,28].forEach(function(i){s+='<text x="'+X(i)+'" y="'+(H-10)+'" text-anchor="middle">wk '+(i+1)+'</text>';});
+  // personal baseline band: best sustained level (weeks 22–26 avg ≈ 304)
+  var base=304, thr=base*1.08;
+  s+='<rect x="'+L+'" width="'+(W-L-R)+'" y="'+Y(thr)+'" height="'+(Y(base)-Y(thr))+'" fill="rgba(63,149,255,.07)"/>';
+  s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(base)+'" y2="'+Y(base)+'" stroke="#3F95FF" stroke-opacity=".5" stroke-dasharray="4 4"/>';
+  s+='<text x="'+(L+6)+'" y="'+(Y(base)+13)+'" style="fill:#9CCBFF">baseline 304 ms</text>';
+  s+='<text x="'+(L+6)+'" y="'+(Y(thr)-5)+'">alert threshold +8%</text>';
+  var line=data.map(function(v,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);}).join(' ');
+  var area=line+' L'+X(n-1)+' '+(H-B)+' L'+L+' '+(H-B)+' Z';
+  s+='<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3F95FF" stop-opacity=".25"/><stop offset="1" stop-color="#3F95FF" stop-opacity="0"/></linearGradient></defs>';
+  s+='<path d="'+area+'" fill="url(#ag)"/>';
+  s+='<path d="'+line+'" fill="none" stroke="#3F95FF" stroke-width="2" stroke-linejoin="round"/>';
+  var drift=data.slice(n-4).map(function(v,j){var i=n-4+j;return (j?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);}).join(' ');
+  s+='<path d="'+drift+'" fill="none" stroke="#FF3D52" stroke-width="2.4" stroke-linejoin="round"/>';
+  var ex=X(n-1), ey=Y(data[n-1]);
+  s+='<circle cx="'+ex+'" cy="'+ey+'" r="9" fill="rgba(255,61,82,.18)"/><circle cx="'+ex+'" cy="'+ey+'" r="4" fill="#FF3D52"/>';
+  s+='<text x="'+(ex-10)+'" y="'+(ey-12)+'" text-anchor="end" style="fill:#FF8A97">331 ms</text>';
+  var sx=X(0), sy=Y(data[0]);
+  s+='<circle cx="'+sx+'" cy="'+sy+'" r="3" fill="#E7ECF6"/><text x="'+(sx+8)+'" y="'+(sy-6)+'" style="fill:#8C98B2">412 ms</text>';
+  svg.innerHTML=s;
+
+  /* ---------- Copy email ---------- */
+  var copyBtn=document.getElementById('copyMail'), copied=document.getElementById('copied'), addr=document.getElementById('mailAddr');
+  copyBtn.addEventListener('click',function(){
+    var text=addr.textContent;
+    function fallback(){var r=document.createRange();r.selectNodeContents(addr);var sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);copied.textContent='Selected. Press Ctrl/Cmd+C';}
+    try{
+      navigator.clipboard.writeText(text).then(function(){copied.textContent='Copied';setTimeout(function(){copied.textContent='';},2000);},fallback);
+    }catch(e){fallback();}
+  });
+})();
+</script>
 </body>
 </html>
